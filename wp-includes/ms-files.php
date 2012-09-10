@@ -16,9 +16,7 @@ if( !is_multisite() )
 
 ms_file_constants();
 
-/* BAE
 error_reporting( 0 );
-*/
 
 if ( $current_blog->archived == '1' || $current_blog->spam == '1' || $current_blog->deleted == '1' ) {
 	status_header( 404 );
@@ -82,4 +80,3 @@ if ( ( $client_last_modified && $client_etag )
 
 // If we made it this far, just serve the file
 readfile( $file );
-?>

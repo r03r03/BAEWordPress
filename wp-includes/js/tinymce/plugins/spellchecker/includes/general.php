@@ -6,9 +6,8 @@
  * @author Moxiecode
  * @copyright Copyright © 2007, Moxiecode Systems AB, All rights reserved.
  */
-/* BAE
+
 @error_reporting(E_ALL ^ E_NOTICE);
-*/
 $config = array();
 
 require_once(dirname(__FILE__) . "/../classes/utils/Logger.php");

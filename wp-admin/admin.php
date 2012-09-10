@@ -12,16 +12,16 @@
  * @since 2.3.2
  */
 if ( ! defined('WP_ADMIN') )
-	define('WP_ADMIN', TRUE);
+	define('WP_ADMIN', true);
 
 if ( ! defined('WP_NETWORK_ADMIN') )
-	define('WP_NETWORK_ADMIN', FALSE);
+	define('WP_NETWORK_ADMIN', false);
 
 if ( ! defined('WP_USER_ADMIN') )
-	define('WP_USER_ADMIN', FALSE);
+	define('WP_USER_ADMIN', false);
 
 if ( ! WP_NETWORK_ADMIN && ! WP_USER_ADMIN ) {
-	define('WP_BLOG_ADMIN', TRUE);
+	define('WP_BLOG_ADMIN', true);
 }
 
 if ( isset($_GET['import']) && !defined('WP_LOAD_IMPORTERS') )
@@ -30,7 +30,7 @@ if ( isset($_GET['import']) && !defined('WP_LOAD_IMPORTERS') )
 require_once(dirname(dirname(__FILE__)) . '/wp-load.php');
 
 if ( get_option('db_upgraded') ) {
-	$wp_rewrite->flush_rules();
+	flush_rewrite_rules();
 	update_option( 'db_upgraded',  false );
 
 	/**
@@ -105,10 +105,9 @@ elseif ( WP_USER_ADMIN )
 else
 	require(ABSPATH . 'wp-admin/menu.php');
 
-/* BAE
 if ( current_user_can( 'manage_options' ) )
 	@ini_set( 'memory_limit', apply_filters( 'admin_memory_limit', WP_MAX_MEMORY_LIMIT ) );
-*/
+
 do_action('admin_init');
 
 if ( isset($plugin_page) ) {
@@ -153,7 +152,6 @@ if ( isset($plugin_page) ) {
 	} else {
 		if ( validate_file($plugin_page) )
 			wp_die(__('Invalid plugin page'));
-
 
 		if ( !( file_exists(WP_PLUGIN_DIR . "/$plugin_page") && is_file(WP_PLUGIN_DIR . "/$plugin_page") ) && !( file_exists(WPMU_PLUGIN_DIR . "/$plugin_page") && is_file(WPMU_PLUGIN_DIR . "/$plugin_page") ) )
 			wp_die(sprintf(__('Cannot load %s.'), htmlentities($plugin_page)));
@@ -230,5 +228,3 @@ if ( isset($plugin_page) ) {
 
 if ( !empty($_REQUEST['action']) )
 	do_action('admin_action_' . $_REQUEST['action']);
-
-?>

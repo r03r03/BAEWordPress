@@ -4,9 +4,7 @@
  *
  * Set this to error_reporting( E_ALL ) or error_reporting( E_ALL | E_STRICT ) for debugging
  */
-/* BAE
 error_reporting(0);
-*/
 
 $basepath = dirname(__FILE__);
 

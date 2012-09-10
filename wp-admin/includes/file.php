@@ -65,7 +65,7 @@ function get_file_description( $file ) {
 			return sprintf( __( '%s Page Template' ), _cleanup_header_comment($name[1]) );
 	}
 
-	return basename( $file );
+	return trim( basename( $file ) );
 }
 
 /**
@@ -81,7 +81,7 @@ function get_home_path() {
 	$siteurl = get_option( 'siteurl' );
 	if ( $home != '' && $home != $siteurl ) {
 		$wp_path_rel_to_home = str_replace($home, '', $siteurl); /* $siteurl - $home */
-		$pos = strpos($_SERVER["SCRIPT_FILENAME"], $wp_path_rel_to_home);
+		$pos = strrpos($_SERVER["SCRIPT_FILENAME"], $wp_path_rel_to_home);
 		$home_path = substr($_SERVER["SCRIPT_FILENAME"], 0, $pos);
 		$home_path = trailingslashit( $home_path );
 	} else {
@@ -157,7 +157,7 @@ function list_files( $folder = '', $levels = 100 ) {
  * Please note that the calling function must unlink() this itself.
  *
  * The filename is based off the passed parameter or defaults to the current unix timestamp,
- * while the directory can either be passed as well, or by leaving  it blank, default to a writable temporary directory.
+ * while the directory can either be passed as well, or by leaving it blank, default to a writable temporary directory.
  *
  * @since 2.6.0
  *
@@ -240,7 +240,7 @@ function wp_handle_upload( &$file, $overrides = false, $time = null ) {
 	// You may define your own function and pass the name in $overrides['upload_error_handler']
 	$upload_error_handler = 'wp_handle_upload_error';
 
-	// You may have had one or more 'wp_handle_upload_prefilter' functions error out the file.  Handle that gracefully.
+	// You may have had one or more 'wp_handle_upload_prefilter' functions error out the file. Handle that gracefully.
 	if ( isset( $file['error'] ) && !is_numeric( $file['error'] ) && $file['error'] )
 		return $upload_error_handler( $file, $file['error'] );
 
@@ -323,189 +323,10 @@ function wp_handle_upload( &$file, $overrides = false, $time = null ) {
 
 	$filename = wp_unique_filename( $uploads['path'], $file['name'], $unique_filename_callback );
 
-	$tmp_file = wp_tempnam($filename);
-
 	// Move the file to the uploads dir
-	if ( false === @ move_uploaded_file( $file['tmp_name'], $tmp_file ) )
-		return $upload_error_handler( $file, sprintf( __('The uploaded file could not be moved to %s.' ), $uploads['path'] ) );
-
-	// If a resize was requested, perform the resize.
-	$image_resize = isset( $_POST['image_resize'] ) && 'true' == $_POST['image_resize'];
-	$do_resize = apply_filters( 'wp_upload_resize', $image_resize );
-	$size = @getimagesize( $tmp_file );
-	if ( $do_resize && $size ) {
-		$old_temp = $tmp_file;
-		$tmp_file = image_resize( $tmp_file, (int) get_option('large_size_w'), (int) get_option('large_size_h'), 0, 'resized');
-		if ( ! is_wp_error($tmp_file) ) {
-			unlink($old_temp);
-		} else {
-			$tmp_file = $old_temp;
-		}
-	}
-
-	// Copy the temporary file into its destination
-	/* BAE
 	$new_file = $uploads['path'] . "/$filename";
-	copy( $tmp_file, $new_file );
-	unlink($tmp_file);
-
-	// Set correct file permissions
-	$stat = stat( dirname( $new_file ));
-	$perms = $stat['mode'] & 0000666;
-	@ chmod( $new_file, $perms );
-
-	// Compute the URL
-	$url = $uploads['url'] . "/$filename";
-	*/
-	
-	//新版采用百度云存储
-	/* BAE */
-	//上传到云存储
-	require_once('bcs.class.php');
-	$bucket = constant('BCS_BUCKET');
-	$opt = array();
-	$baidu_bcs = new BaiduBCS();
-
-
-	$object =  "/$filename";
-	$fileUpload = $tmp_file;
-
-	if( !file_exists($fileUpload) )
-	{
-		die('shit!!!!!!!!!!!!!');
-	}
-
-	$baidu_bcs->create_object ( $bucket, $object, $fileUpload, $opt );
-	unlink($tmp_file);
-	
-	$url = $baidu_bcs->generate_get_object_url($bucket, $object);
-	/* BAE */
-	if ( is_multisite() )
-		delete_transient( 'dirsize_cache' );
-	return apply_filters( 'wp_handle_upload', array( 'file' => $new_file, 'url' => $url, 'type' => $type ), 'upload' );
-}
-
-if( !function_exists('wp_handle_upload')):
-function wp_handle_upload( &$file, $overrides = false, $time = null ) {
-	// The default error handler.
-	if ( ! function_exists( 'wp_handle_upload_error' ) ) {
-		function wp_handle_upload_error( &$file, $message ) {
-			return array( 'error'=>$message );
-		}
-	}
-
-	$file = apply_filters( 'wp_handle_upload_prefilter', $file );
-
-	// You may define your own function and pass the name in $overrides['upload_error_handler']
-	$upload_error_handler = 'wp_handle_upload_error';
-
-	// You may have had one or more 'wp_handle_upload_prefilter' functions error out the file.  Handle that gracefully.
-	if ( isset( $file['error'] ) && !is_numeric( $file['error'] ) && $file['error'] )
-		return $upload_error_handler( $file, $file['error'] );
-
-	// You may define your own function and pass the name in $overrides['unique_filename_callback']
-	$unique_filename_callback = null;
-
-	// $_POST['action'] must be set and its value must equal $overrides['action'] or this:
-	$action = 'wp_handle_upload';
-
-	// Courtesy of php.net, the strings that describe the error indicated in $_FILES[{form field}]['error'].
-	$upload_error_strings = array( false,
-		__( "The uploaded file exceeds the upload_max_filesize directive in php.ini." ),
-		__( "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form." ),
-		__( "The uploaded file was only partially uploaded." ),
-		__( "No file was uploaded." ),
-		'',
-		__( "Missing a temporary folder." ),
-		__( "Failed to write file to disk." ),
-		__( "File upload stopped by extension." ));
-
-	// All tests are on by default. Most can be turned off by $overrides[{test_name}] = false;
-	$test_form = true;
-	$test_size = true;
-	$test_upload = true;
-
-	// If you override this, you must provide $ext and $type!!!!
-	$test_type = true;
-	$mimes = false;
-
-	// Install user overrides. Did we mention that this voids your warranty?
-	if ( is_array( $overrides ) )
-		extract( $overrides, EXTR_OVERWRITE );
-
-	// A correct form post will pass this test.
-	if ( $test_form && (!isset( $_POST['action'] ) || ($_POST['action'] != $action ) ) )
-		return call_user_func($upload_error_handler, $file, __( 'Invalid form submission.' ));
-
-	// A successful upload will pass this test. It makes no sense to override this one.
-	if ( $file['error'] > 0 )
-		return call_user_func($upload_error_handler, $file, $upload_error_strings[$file['error']] );
-
-	// A non-empty file will pass this test.
-	if ( $test_size && !($file['size'] > 0 ) ) {
-		if ( is_multisite() )
-			$error_msg = __( 'File is empty. Please upload something more substantial.' );
-		else
-			$error_msg = __( 'File is empty. Please upload something more substantial. This error could also be caused by uploads being disabled in your php.ini or by post_max_size being defined as smaller than upload_max_filesize in php.ini.' );
-		return call_user_func($upload_error_handler, $file, $error_msg);
-	}
-
-	// A properly uploaded file will pass this test. There should be no reason to override this one.
-	if ( $test_upload && ! @ is_uploaded_file( $file['tmp_name'] ) )
-		return call_user_func($upload_error_handler, $file, __( 'Specified file failed upload test.' ));
-
-	// A correct MIME type will pass this test. Override $mimes or use the upload_mimes filter.
-	if ( $test_type ) {
-		$wp_filetype = wp_check_filetype_and_ext( $file['tmp_name'], $file['name'], $mimes );
-
-		extract( $wp_filetype );
-
-		// Check to see if wp_check_filetype_and_ext() determined the filename was incorrect
-		if ( $proper_filename )
-			$file['name'] = $proper_filename;
-
-		if ( ( !$type || !$ext ) && !current_user_can( 'unfiltered_upload' ) )
-			return call_user_func($upload_error_handler, $file, __( 'Sorry, this file type is not permitted for security reasons.' ));
-
-		if ( !$ext )
-			$ext = ltrim(strrchr($file['name'], '.'), '.');
-
-		if ( !$type )
-			$type = $file['type'];
-	} else {
-		$type = '';
-	}
-
-	// A writable uploads dir will pass this test. Again, there's no point overriding this one.
-	if ( ! ( ( $uploads = wp_upload_dir($time) ) && false === $uploads['error'] ) )
-		return call_user_func($upload_error_handler, $file, $uploads['error'] );
-
-	$filename = wp_unique_filename( $uploads['path'], $file['name'], $unique_filename_callback );
-
-	$tmp_file = wp_tempnam($filename);
-
-	// Move the file to the uploads dir
-	if ( false === @ move_uploaded_file( $file['tmp_name'], $tmp_file ) )
+	if ( false === @ move_uploaded_file( $file['tmp_name'], $new_file ) )
 		return $upload_error_handler( $file, sprintf( __('The uploaded file could not be moved to %s.' ), $uploads['path'] ) );
-
-	// If a resize was requested, perform the resize.
-	$image_resize = isset( $_POST['image_resize'] ) && 'true' == $_POST['image_resize'];
-	$do_resize = apply_filters( 'wp_upload_resize', $image_resize );
-	$size = @getimagesize( $tmp_file );
-	if ( $do_resize && $size ) {
-		$old_temp = $tmp_file;
-		$tmp_file = image_resize( $tmp_file, (int) get_option('large_size_w'), (int) get_option('large_size_h'), 0, 'resized');
-		if ( ! is_wp_error($tmp_file) ) {
-			unlink($old_temp);
-		} else {
-			$tmp_file = $old_temp;
-		}
-	}
-
-	// Copy the temporary file into its destination
-	$new_file = $uploads['path'] . "/$filename";
-	copy( $tmp_file, $new_file );
-	unlink($tmp_file);
 
 	// Set correct file permissions
 	$stat = stat( dirname( $new_file ));
@@ -520,11 +341,10 @@ function wp_handle_upload( &$file, $overrides = false, $time = null ) {
 
 	return apply_filters( 'wp_handle_upload', array( 'file' => $new_file, 'url' => $url, 'type' => $type ), 'upload' );
 }
-endif;
 
 /**
  * Handle sideloads, which is the process of retrieving a media item from another server instead of
- * a traditional media upload.  This process involves sanitizing the filename, checking extensions
+ * a traditional media upload. This process involves sanitizing the filename, checking extensions
  * for mime type, and moving the file to the appropriate directory within the uploads directory.
  *
  * @since 2.6.0
@@ -646,7 +466,7 @@ function wp_handle_sideload( &$file, $overrides = false ) {
 
 /**
  * Downloads a url to a local temporary file using the WordPress HTTP Class.
- * Please note, That the calling function must unlink() the  file.
+ * Please note, That the calling function must unlink() the file.
  *
  * @since 2.5.0
  *
@@ -698,9 +518,8 @@ function unzip_file($file, $to) {
 		return new WP_Error('fs_unavailable', __('Could not access filesystem.'));
 
 	// Unzip can use a lot of memory, but not this much hopefully
-	/* BAE
 	@ini_set( 'memory_limit', apply_filters( 'admin_memory_limit', WP_MAX_MEMORY_LIMIT ) );
-	*/
+
 	$needed_dirs = array();
 	$to = trailingslashit($to);
 
@@ -809,7 +628,7 @@ function _unzip_file_ziparchive($file, $to, $needed_dirs = array() ) {
 			return new WP_Error('extract_failed', __('Could not extract file from archive.'), $info['name']);
 
 		if ( ! $wp_filesystem->put_contents( $to . $info['name'], $contents, FS_CHMOD_FILE) )
-			return new WP_Error('copy_failed', __('Could not copy file.'), $to . $info['filename']);
+			return new WP_Error('copy_failed', __('Could not copy file.'), $to . $info['name']);
 	}
 
 	$z->close();
@@ -1045,7 +864,7 @@ function get_filesystem_method($args = array(), $context = false) {
 }
 
 /**
- * Displays a form to the user to request for their FTP/SSH details in order to  connect to the filesystem.
+ * Displays a form to the user to request for their FTP/SSH details in order to connect to the filesystem.
  * All chosen/entered details are saved, Excluding the Password.
  *
  * Hostnames may be in the form of hostname:portnumber (eg: wordpress.org:2467) to specify an alternate FTP/SSH port.
@@ -1057,7 +876,7 @@ function get_filesystem_method($args = array(), $context = false) {
  * @param string $form_post the URL to post the form to
  * @param string $type the chosen Filesystem method in use
  * @param boolean $error if the current request has failed to connect
- * @param string $context The directory which is needed access to, The write-test will be performed on  this directory by get_filesystem_method()
+ * @param string $context The directory which is needed access to, The write-test will be performed on this directory by get_filesystem_method()
  * @param string $extra_fields Extra POST fields which should be checked for to be included in the post.
  * @return boolean False on failure. True on success.
  */
@@ -1236,5 +1055,3 @@ submit_button( __( 'Proceed' ), 'button', 'upgrade' );
 <?php
 	return false;
 }
-
-?>

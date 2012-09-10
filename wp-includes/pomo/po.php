@@ -11,9 +11,7 @@ require_once dirname(__FILE__) . '/translations.php';
 
 define('PO_MAX_LINE_LEN', 79);
 
-/* BAE
 ini_set('auto_detect_line_endings', 1);
-*/
 
 /**
  * Routines for working with PO files
