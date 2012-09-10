@@ -161,6 +161,9 @@ switch($step) {
 	 * @ignore
 	 */
 	define('DB_NAME', $dbname);
+	define('DB_USER', getenv('HTTP_BAE_ENV_AK'));
+	define('DB_PASSWORD', getenv('HTTP_BAE_ENV_SK'));
+	define('DB_HOST', getenv('HTTP_BAE_ENV_ADDR_SQL_IP') . ":" . getenv('HTTP_BAE_ENV_ADDR_SQL_PORT'));
 	/**#@-*/
 
 	// We'll fail here if the values are no good.
@@ -229,8 +232,7 @@ switch($step) {
 	}
 	unset( $line );
 
-	if ( ! is_writable(ABSPATH) ) :
-		display_header();
+	display_header();
 ?>
 <p><?php _e( "Sorry, but I can't write the <code>wp-config.php</code> file." ); ?></p>
 <p><?php _e( 'You can create the <code>wp-config.php</code> manually and paste the following text into it.' ); ?></p>
@@ -242,20 +244,6 @@ switch($step) {
 <p><?php _e( 'After you\'ve done that, click "Run the install."' ); ?></p>
 <p class="step"><a href="install.php" class="button"><?php _e( 'Run the install' ); ?></a></p>
 <?php
-	else :
-		$handle = fopen(ABSPATH . 'wp-config.php', 'w');
-		foreach( $config_file as $line ) {
-			fwrite($handle, $line);
-		}
-		fclose($handle);
-		chmod(ABSPATH . 'wp-config.php', 0666);
-		display_header();
-?>
-<p><?php _e( "All right sparky! You've made it through this part of the installation. WordPress can now communicate with your database. If you are ready, time now to&hellip;" ); ?></p>
-
-<p class="step"><a href="install.php" class="button"><?php _e( 'Run the install' ); ?></a></p>
-<?php
-	endif;
 	break;
 }
 ?>
