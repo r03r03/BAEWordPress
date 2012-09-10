@@ -111,9 +111,6 @@ switch($step) {
 <p><?php _e( 'Welcome to WordPress. Before getting started, we need some information on the database. You will need to know the following items before proceeding.' ) ?></p>
 <ol>
 	<li><?php _e( 'Database name' ); ?></li>
-	<li><?php _e( 'Database username' ); ?></li>
-	<li><?php _e( 'Database password' ); ?></li>
-	<li><?php _e( 'Database host' ); ?></li>
 	<li><?php _e( 'Table prefix (if you want to run more than one WordPress in a single database)' ); ?></li>
 </ol>
 <p><strong><?php _e( "If for any reason this automatic file creation doesn't work, don't worry. All this does is fill in the database information to a configuration file. You may also simply open <code>wp-config-sample.php</code> in a text editor, fill in your information, and save it as <code>wp-config.php</code>." ); ?></strong></p>
@@ -135,21 +132,6 @@ switch($step) {
 			<td><?php _e( 'The name of the database you want to run WP in.' ); ?></td>
 		</tr>
 		<tr>
-			<th scope="row"><label for="uname"><?php _e( 'User Name' ); ?></label></th>
-			<td><input name="uname" id="uname" type="text" size="25" value="<?php echo htmlspecialchars( _x( 'username', 'example username' ), ENT_QUOTES ); ?>" /></td>
-			<td><?php _e( 'Your MySQL username' ); ?></td>
-		</tr>
-		<tr>
-			<th scope="row"><label for="pwd"><?php _e( 'Password' ); ?></label></th>
-			<td><input name="pwd" id="pwd" type="text" size="25" value="<?php echo htmlspecialchars( _x( 'password', 'example password' ), ENT_QUOTES ); ?>" /></td>
-			<td><?php _e( '&hellip;and your MySQL password.' ); ?></td>
-		</tr>
-		<tr>
-			<th scope="row"><label for="dbhost"><?php _e( 'Database Host' ); ?></label></th>
-			<td><input name="dbhost" id="dbhost" type="text" size="25" value="localhost" /></td>
-			<td><?php _e( 'You should be able to get this info from your web host, if <code>localhost</code> does not work.' ); ?></td>
-		</tr>
-		<tr>
 			<th scope="row"><label for="prefix"><?php _e( 'Table Prefix' ); ?></label></th>
 			<td><input name="prefix" id="prefix" type="text" value="wp_" size="25" /></td>
 			<td><?php _e( 'If you want to run multiple WordPress installations in a single database, change this.' ); ?></td>
@@ -162,7 +144,7 @@ switch($step) {
 	break;
 
 	case 2:
-	foreach ( array( 'dbname', 'uname', 'pwd', 'dbhost', 'prefix' ) as $key )
+	foreach ( array( 'dbname', 'prefix' ) as $key )
 		$$key = trim( stripslashes( $_POST[ $key ] ) );
 
 	$tryagain_link = '</p><p class="step"><a href="setup-config.php?step=1" onclick="javascript:history.go(-1);return false;" class="button">' . __( 'Try Again' ) . '</a>';
@@ -179,9 +161,6 @@ switch($step) {
 	 * @ignore
 	 */
 	define('DB_NAME', $dbname);
-	define('DB_USER', $uname);
-	define('DB_PASSWORD', $pwd);
-	define('DB_HOST', $dbhost);
 	/**#@-*/
 
 	// We'll fail here if the values are no good.
@@ -234,9 +213,6 @@ switch($step) {
 
 		switch ( $constant ) {
 			case 'DB_NAME'     :
-			case 'DB_USER'     :
-			case 'DB_PASSWORD' :
-			case 'DB_HOST'     :
 				$config_file[ $line_num ] = "define('" . $constant . "'," . $padding . "'" . addcslashes( constant( $constant ), "\\'" ) . "');\r\n";
 				break;
 			case 'AUTH_KEY'         :
