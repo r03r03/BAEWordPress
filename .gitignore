@@ -1,2 +1,7 @@
+<<<<<<< HEAD
 .settings/
 .project
+=======
+.svn/
+.DS_Store
+>>>>>>> add bcs support plugins
