@@ -66,10 +66,6 @@ function mv_attachments_to_bcs($data) {
     if(false === getenv ( 'HTTP_BAE_ENV_SK' )) {
 	    $bcs_sk = attribute_escape($bcs_options['sk']);
     }
-    require_once "BaeLog.class.php";
-
-	$logger=BaeLog::getInstance();
-	$logger ->logTrace("BUCKET" . $bcs_bucket);
     
 	$baidu_bcs = new BaiduBCS($bcs_ak, $bcs_sk);
 
