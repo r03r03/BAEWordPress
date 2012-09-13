@@ -112,6 +112,7 @@ switch($step) {
 <ol>
 	<li><?php _e( 'Database name' ); ?></li>
 	<li><?php _e( 'Table prefix (if you want to run more than one WordPress in a single database)' ); ?></li>
+	<li><?php _e( 'BCMS queue name (so that you can send email, get it from)' ); ?><a href="http://developer.baidu.com/bae/bms/list/" target="_blank">BCMS</a></li>
 </ol>
 <p><strong><?php _e( "If for any reason this automatic file creation doesn't work, don't worry. All this does is fill in the database information to a configuration file. You may also simply open <code>wp-config-sample.php</code> in a text editor, fill in your information, and save it as <code>wp-config.php</code>." ); ?></strong></p>
 <p><?php _e( "In all likelihood, these items were supplied to you by your Web Host. If you do not have this information, then you will need to contact them before you can continue. If you&#8217;re all ready&hellip;" ); ?></p>
@@ -136,6 +137,11 @@ switch($step) {
 			<td><input name="prefix" id="prefix" type="text" value="wp_" size="25" /></td>
 			<td><?php _e( 'If you want to run multiple WordPress installations in a single database, change this.' ); ?></td>
 		</tr>
+		<tr>
+			<th scope="row"><label for="bcmsqueuename"><?php _e( 'BCMS Queue name' ); ?></label></th>
+			<td><input name="bcmsqueuename" id="bcmsqueuename" type="text" value="" size="50" /></td>
+			<td><?php _e( 'sending Email, the BCMS queue name should type in.' ); ?><a href="http://developer.baidu.com/bae/bms/list/" target="_blank">BCMS</a></td>
+		</tr>
 	</table>
 	<?php if ( isset( $_GET['noapi'] ) ) { ?><input name="noapi" type="hidden" value="1" /><?php } ?>
 	<p class="step"><input name="submit" type="submit" value="<?php echo htmlspecialchars( __( 'Submit' ), ENT_QUOTES ); ?>" class="button" /></p>
@@ -144,7 +150,7 @@ switch($step) {
 	break;
 
 	case 2:
-	foreach ( array( 'dbname', 'prefix' ) as $key )
+	foreach ( array( 'dbname', 'prefix', "bcmsqueuename" ) as $key )
 		$$key = trim( stripslashes( $_POST[ $key ] ) );
 
 	$tryagain_link = '</p><p class="step"><a href="setup-config.php?step=1" onclick="javascript:history.go(-1);return false;" class="button">' . __( 'Try Again' ) . '</a>';
@@ -164,6 +170,7 @@ switch($step) {
 	define('DB_USER', getenv('HTTP_BAE_ENV_AK'));
 	define('DB_PASSWORD', getenv('HTTP_BAE_ENV_SK'));
 	define('DB_HOST', getenv('HTTP_BAE_ENV_ADDR_SQL_IP') . ":" . getenv('HTTP_BAE_ENV_ADDR_SQL_PORT'));
+	define('BCMS_QUEUE', $bcmsqueuename);
 	/**#@-*/
 
 	// We'll fail here if the values are no good.
@@ -215,6 +222,7 @@ switch($step) {
 		$padding  = $match[2];
 
 		switch ( $constant ) {
+			case 'BCMS_QUEUE'  :
 			case 'DB_NAME'     :
 				$config_file[ $line_num ] = "define('" . $constant . "'," . $padding . "'" . addcslashes( constant( $constant ), "\\'" ) . "');\r\n";
 				break;

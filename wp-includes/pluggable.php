@@ -174,6 +174,23 @@ function cache_users( $user_ids ) {
 }
 endif;
 
+/**
+ * Send Mail 
+ * BCMS 
+ */
+if ( !function_exists( 'wp_mail' ) ) :
+function wp_mail( $to, $subject, $message, $headers = '', $attachments = array() ) {
+	require_once ABSPATH . WPINC . '/Bcms.class.php';
+    $bcms = new Bcms () ;
+    $ret = $bcms->mail ( BCMS_QUEUE, $message, array($to), array( Bcms::MAIL_SUBJECT => $subject)) ;
+	if ( false === $ret ) {
+		return false;
+	} else {
+		return true;
+    }
+}
+endif;
+
 if ( !function_exists( 'wp_mail' ) ) :
 /**
  * Send mail, similar to PHP's mail

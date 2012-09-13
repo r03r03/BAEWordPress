@@ -102,13 +102,13 @@ function bcs_setting_page() {
 
 	$options = array();
 	if($_POST['bucket']) {
-		$options['bucket'] = stripslashes($_POST['bucket']);
+		$options['bucket'] = trim(stripslashes($_POST['bucket']));
 	}
 	if($_POST['ak'] && false === getenv ( 'HTTP_BAE_ENV_AK' )) {
-		$options['ak'] = stripslashes($_POST['ak']);
+		$options['ak'] = trim(stripslashes($_POST['ak']));
 	}
 	if($_POST['sk'] && false === getenv ( 'HTTP_BAE_ENV_SK' )) {
-		$options['sk'] = stripslashes($_POST['sk']);
+		$options['sk'] = trim(stripslashes($_POST['sk']));
 	}
 	if($options !== array() ){
 	
