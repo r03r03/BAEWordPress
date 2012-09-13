@@ -1,14 +1,14 @@
 <?php
 /**
- * @package BCS Support 2
- * @version 0.2
+ * @package BCS Support
+ * @version 1.0
  */
 /*
-Plugin Name: BCS Support 2
+Plugin Name: BCS Support
 Plugin URI: ""
 Description: This is a plugin for bcs.
 Author: HJin.me
-Version: 0.2
+Version: 1.0
 Author URI: http://hjin.me/
 */
 
@@ -34,6 +34,23 @@ function bcs_set_options() {
     
     add_option('bcs_options', $options, '', 'yes');
 }
+
+
+function bcs_admin_warnings() {
+    $bcs_options = get_option('bcs_options', TRUE);
+
+    $bcs_bucket = attribute_escape($bcs_options['bucket']);
+	if ( !$bcs_options['bucket'] && !isset($_POST['submit']) ) {
+		function bcs_warning() {
+			echo "
+			<div id='bcs-warning' class='updated fade'><p><strong>".__('Bcs is almost ready.')."</strong> ".sprintf(__('You must <a href="%1$s">enter your BCS Bucket </a> for it to work.'), "options-general.php?page=" . BCS_BASEFOLDER . "/bcs-support.php")."</p></div>
+			";
+		}
+		add_action('admin_notices', 'bcs_warning');
+		return;
+	} 
+}
+bcs_admin_warnings();
 /*
  Hook 所有上传操作，上传完成后再存到云存储。
  默认设置为 public
@@ -150,7 +167,7 @@ function bcs_setting_page() {
         ?>
         <fieldset class="submit">
             <legend>更新选项</legend>
-            <input type="submit" name="Submit" value="更新" />
+            <input type="submit" name="submit" value="更新" />
         </fieldset>
     </form>
 </div>
